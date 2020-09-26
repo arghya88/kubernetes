@@ -419,6 +419,10 @@ func (sched *Scheduler) finishBinding(prof *profile.Profile, assumed *v1.Pod, ta
 // scheduleOne does the entire scheduling workflow for a single pod.  It is serialized on the scheduling algorithm's host fitting.
 func (sched *Scheduler) scheduleOne(ctx context.Context) {
 	podInfo := sched.NextPod()
+	podPriority := podutil.GetPodPriority(podInfo.Pod)
+	if podPriority > 0 {
+		metrics.PodWithPriority.Observe(float64(podPriority))
+	}
 	// pod could be nil when schedulerQueue is closed
 	if podInfo == nil || podInfo.Pod == nil {
 		return
@@ -496,7 +500,6 @@ func (sched *Scheduler) scheduleOne(ctx context.Context) {
 		sched.recordSchedulingFailure(prof, assumedPodInfo, err, SchedulerError, "")
 		return
 	}
-
 	// Run the Reserve method of reserve plugins.
 	if sts := prof.RunReservePluginsReserve(schedulingCycleCtx, state, assumedPod, scheduleResult.SuggestedHost); !sts.IsSuccess() {
 		metrics.PodScheduleError(prof.Name, metrics.SinceInSeconds(start))
