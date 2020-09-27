@@ -17,6 +17,7 @@ limitations under the License.
 package queue
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -741,7 +742,7 @@ func TestSchedulingQueue_Close(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		pod, err := q.Pop()
-		if err.Error() != wantErr.Error() {
+		if(!errors.Is(err, errors.New(wantErr)))	
 			t.Errorf("Expected err %q from Pop() if queue is closed, but got %q", wantErr.Error(), err.Error())
 		}
 		if pod != nil {
